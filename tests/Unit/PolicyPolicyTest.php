@@ -13,7 +13,7 @@ class PolicyPolicyTest extends TestCase
         Creo un administrador usando una técnica llamada wishful thinking. Esto es que voy a escribir el codigo que quiero utilizar aunque aun no lo tenga desarrollado
         Por ejemplo el admin a partir del metodo createAdmin() aunque este aun no exista, ya lo crearé luego
         luego uso el metodo be que como el usuario actingAs permite con conecte con el usuario
-        luego si quiero ver que el usuario actualice un Post entonces debo tener un Post
+        luego si quiero ver que el usuario actualice un Post entonces debo tener un Post.
          
     */
     /** @test **/
