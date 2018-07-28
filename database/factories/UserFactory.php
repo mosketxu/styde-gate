@@ -21,3 +21,8 @@ $factory->define(App\User::class, function (Faker $faker) {
         'remember_token' => str_random(10),
     ];
 });
+
+/* Defino el state que me hacer falta en la prueba PolicyPolicyTest*/
+$factory->state(\App\User::class,'admin',function(Faker $faker){
+    return ['role'=>'admin'];
+});
