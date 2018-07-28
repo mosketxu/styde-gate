@@ -22,7 +22,11 @@ $factory->define(App\User::class, function (Faker $faker) {
     ];
 });
 
-/* Defino el state que me hacer falta en la prueba PolicyPolicyTest*/
-$factory->state(\App\User::class,'admin',function(Faker $faker){
-    return ['role'=>'admin'];
-});
+/* Defino el state que me hacer falta en la prueba PolicyPolicyTest
+        $factory->state(\App\User::class,'admin',function(Faker $faker){
+            return ['role'=>'admin'];
+        });
+    Aunque una forma más sencilla en la que me permita además pasar los datos es en lugar de 
+    pasar una funcion anonima, pasar una array asociativo con los datos.
+*/
+$factory->state(\App\User::class,'admin',['role'=>'admin']);
