@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\{User, Post};
+use App\Policies\PostPolicy;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
 
@@ -109,7 +110,7 @@ class AuthServiceProvider extends ServiceProvider
             Así que mi logica será que si el user es Admin retorne verdadero y que si no lo es retorne null. Puedo ponerlo o no. Lo pongo para verlo mas claro
 
             Las pruebas pasan, así que puedo eliminar la comprobacion de si es admin en el resto de los gates
-            */
+        
             Gate::before(function(User $user){
                 if($user->isAdmin()){
                     return true;
@@ -125,6 +126,69 @@ class AuthServiceProvider extends ServiceProvider
             Gate::define('delete-post',function(User $user, Post $post){  
                 return $user->owns($post) && !$post->isPublished();  
             });
+        */
+        
+        /**Uso de clases y metodos en lugar de funciones anonimas en los gates */
+        /* Puede llegar a suceder que si tengo muchos gates el fichero AuthServiceProvider puede crecer mucho,
+        así que usaremos de clases y metodos en lugar de funciones anonimas en los gates 
+        
+        Genero una nueva clase con el metodo POLICY php artisan make:policy PostPolicy
 
+        Gate::before(function(User $user){
+            if($user->isAdmin()){
+                return true;
+            }
+            return null;
+
+        });
+
+        Gate::define('update-post','\App\Policies\PostPolicy@update');
+
+        Gate::define('delete-post','\App\Policies\PostPolicy@delete');
+
+
+         Generalmente cuando estamos trabajando con un recurso como por ejemplo un Post, nos hace falta
+        crear reglas para Visualizar, crear, actualizar y eliminar dicho recurso, es decir CRUD
+        Laravel nos permite definir reglas usando el metodo resource de Gate.
+        Para usarlo en AuthServiceProvider pasamos como primer argumento el nombre de nuestro recurso en singular o plurar i.e post
+        y como segundo argumento la clase qye queremos utilizar. En nuestro caso PostPolicy 
+            Gate::resource('post',PostPolicy::class);
+        Esto es equivalente a crear reglas para view, create, update, delete del recurso Post
+        Ejecuto pruebas y fallan
+        ERROR: Fallan varias pruebas porque el nombre de las reglas va a ser diferente
+        SOLUCION: Sustituir en las rutas donde pone update-post por post.update es el nombre del recurso post + . + metodo  Si hubiera llamado posts al recurso seria posts + . + metodo
+                                                    delete-post por post.delete
+        Cambio los nombres y error
+        ERROR: No existe la clase PostPolicy
+        SOLUCION: importala al comienzo del fichero
+
+        Cabe destacar que PostPolicy es una clase usada por el framework pero no deja de ser una clase de PHP
+        Por eso tambien puedo hacer pruebas unitarias sobre la clase.
+        Para probarlo como ejemplo vamos a modificar la prueba authors_can_update_posts. Ver allí lo que hago. Esto no es necesario, es un ejemplo que puede ser interesante para logicas mas complejas
+        
+        Que pasa si quiero otros metodos distintos a los que da el resource CRUD
+        Se puede hacer pasando un tercer argumento que será un array asociativo donde las llaves van a ser los nombres de las reglas y los valores
+        los nombre de los metodos que se quieren llamar
+
+        */
+
+        Gate::before(function(User $user){
+            if($user->isAdmin()){
+                return true;
+            } 
+            return null;
+
+        });
+
+        //Gate::resource('post',PostPolicy::class); //Esto es equivalente a crear reglas para view, create, update, delete del recurso Post Asi que me sobran los otros gate
+        /* si quiero ademas del CRUD otros metodos lo hago con array asociativo array asociativo donde las llaves van a ser los nombres de las reglas y los valores
+        los nombre de los metodos que se quieren llamar
+        Aqui los llamo updatePost y deletePost entonces tengo que cambiar el nombre de los metodos en PostPolcy
+        */    
+        Gate::resource('post',PostPolicy::class,[
+            'update'=>'updatePost',
+            'delete'=>'deletePost', 
+        ]);
     }
+
 }

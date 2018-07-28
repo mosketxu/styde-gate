@@ -197,7 +197,8 @@ class PolicyPolicyTest extends TestCase
         $post=factory(Post::class)->create();
 
          // Act
-         $result=Gate::allows('update-post',$post);
+         // $result=Gate::allows('update-post',$post); //tras el cambio en los gates a usar el gate::resource cambia el nombre de la regla
+         $result=Gate::allows('post.update',$post); 
          //Assert
          $this->assertTrue($result);
     }
@@ -221,7 +222,8 @@ class PolicyPolicyTest extends TestCase
         $post=factory(Post::class)->states('published')->create();   
  
          $this->assertTrue(
-             Gate::forUser($admin)->allows('delete-post',$post)
+             //Gate::forUser($admin)->allows('delete-post',$post) //tras el cambio en los gates a usar el gate::resource cambia el nombre de la regla
+             Gate::forUser($admin)->allows('post.delete',$post)
          );
     }
 
@@ -242,8 +244,8 @@ class PolicyPolicyTest extends TestCase
         $post=new Post;    // me hará falta crear el modelo
 
          // Act
-         $result=Gate::allows('update-post',$post);
-
+         //$result=Gate::allows('update-post',$post); //tras el cambio en los gates a usar el gate::resource cambia el nombre de la regla
+         $result=Gate::allows('post.update',$post);
          //Assert
          $this->assertFalse($result);
     }
@@ -272,7 +274,8 @@ class PolicyPolicyTest extends TestCase
 
          // Act
          //$result=Gate::allows('update-post',$post);
-         $result=Gate::forUser($user)->allows('update-post',$post);
+         //$result=Gate::forUser($user)->allows('update-post',$post);
+         $result=Gate::forUser($user)->allows('post.update',$post); //por el uso de resource en gate
 
 
          //Assert
@@ -292,19 +295,43 @@ class PolicyPolicyTest extends TestCase
         ERROR: Failed asserting that false is true  Me devuelve falso y espero true porque no he modificado la logica de AuthServiceProvider
         SOLUCION: en AuthServiceProvider modifico la logica return $user->role==='admin' || $user->id=== $post->user_id;
         la prueba pasa
-    */
+
+        La prueba queda como sigue antes del cambio tras la creacion del PostOlicy
+            public function authors_can_update_posts()
+            {
+                // Arrange
+                $user=$this->createUser();
+                $this->be($user); 
+                $post=factory(Post::class)->create([
+                    'user_id'=>$user->id,
+                ]);   
+
+                // Act
+        //         $result=Gate::allows('update-post',$post);
+                $result=Gate::allows('post.update',$post);
+                
+                //Assert
+                $this->assertTrue($result);
+            }
+
+        Tras la creacion del PostPolicy puedo modificar la llamada al usuario (no lo conecto con el be)
+        haciendo una instancia a la clase PostPolcy y llamando al metodo update y enviando el user y el post
+        No olvidar o bien instanciar con la ruta completa o insertar la clase al comienzo del fichero
+        Aunque realmente no es necesario. Es solo un ejemplo
+        Así que lo dejo como antes, pero en lugar de con el be con el forUser
+        */
     /** @test **/
     public function authors_can_update_posts()
     {
         // Arrange
         $user=$this->createUser();
-        $this->be($user); 
         $post=factory(Post::class)->create([
             'user_id'=>$user->id,
         ]);   
 
          // Act
-         $result=Gate::allows('update-post',$post);
+         // $result=(new \App\Policies\PostPolicy)->update($user,$post); //tambien puedo insertar la clase al comienzo del fichero
+            $result=Gate::foruser($user)->allows('post.update',$post);
          
          //Assert
          $this->assertTrue($result);
@@ -344,6 +371,7 @@ class PolicyPolicyTest extends TestCase
             Hacemos una prueba en la que los autores pueden eliminar los posts que no estan publicados
             Otra en la que los autores no puedan eliminar un post ya publicado
 
+            
    */
     /** @test **/
    public function authors_can_update_posts_unpublished()
@@ -361,7 +389,8 @@ class PolicyPolicyTest extends TestCase
         //Assert
         //$this->assertTrue($result);
         $this->assertTrue(
-            Gate::forUser($user)->allows('update-post',$post)
+//            Gate::forUser($user)->allows('update-post',$post)
+            Gate::forUser($user)->allows('post.update',$post)
         );
    }
 
@@ -385,8 +414,9 @@ class PolicyPolicyTest extends TestCase
         ]);   
  
          $this->assertTrue(
-             Gate::forUser($user)->allows('delete-post',$post)
-         );
+            // Gate::forUser($user)->allows('delete-post',$post)
+            Gate::forUser($user)->allows('post.delete',$post)
+        );
     }
 
    /**authors_cannot_delete_posts_published
@@ -413,7 +443,7 @@ class PolicyPolicyTest extends TestCase
         ]);   
  
          $this->assertFalse(
-             Gate::forUser($user)->allows('delete-post',$post)
+             Gate::forUser($user)->allows('post.delete',$post)
          );
     }
 
