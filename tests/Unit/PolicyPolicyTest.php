@@ -202,6 +202,30 @@ class PolicyPolicyTest extends TestCase
          $this->assertTrue($result);
     }
 
+    /* admins_can_delete_published_posts 
+       la copio de Authors_cannot_delete_published_posts
+       el usuario que creo es un admin y aqui no importa si es autor o no, asi que lo quito del post
+       pongo el assert del gate a true
+        ERROR: Failed asserting that false is true.
+        SOLUCION: Voy a AuthServiceProvider y modifico la condicion: quiero que pueda borrar el post si es admin o (es autor y no esta publicado)
+            return $user->isAdmin() || ($user->owns($post) && !$post->isPublished());  
+        Las pruebas pasan
+        Aunque la logica de AuthServiceProvider se ha complicado un poco. Ir allí
+
+       */
+    /** @test **/
+    public function admins_can_delete_published_posts()
+    {
+        $admin=$this->createAdmin();
+ 
+        $post=factory(Post::class)->states('published')->create();   
+ 
+         $this->assertTrue(
+             Gate::forUser($admin)->allows('delete-post',$post)
+         );
+    }
+
+
     /* guests_cannot_update_posts 
         Aqui ni creo el usuario ni lo conecto. Solo mando un post, pregunto y verifico que no pueda actualizarlo
         La prueba pasa. Nota: veo que pasan 4 pruebas cuando solo tengo 2. Es porque estan las de ejemplo de feature y de unit. Las borro
@@ -286,6 +310,114 @@ class PolicyPolicyTest extends TestCase
          $this->assertTrue($result);
     }
 
+   /* authors_can_update_posts_unpublished
+        Creo un usuario
+        Lo conecto cn forUser
+        Creo un post con el state unpublished o draft (borrador) y en el que el usuario es el autor del post
+        Luego verifico que puede actualizar el post 
+        Simplifico la prueba poniendo el $result directamente en el assertTrue
+            public function authors_can_update_posts_unpublished()
+            {
+                // Arrange
+                $user=$this->createUser();
+
+                $post=factory(Post::class)->states('draft')->create([
+                    'user_id'=>$user->id,
+                ]);   
+
+                    // Act
+                    // $result=Gate::forUser($user)->allows('update-post',$post); lo pongo directamente en el assertTrue
+                    
+                    //Assert
+                    //$this->assertTrue($result);
+                    $this->assertTrue(
+                        Gate::forUser($user)->allows('update-post',$post)
+                    );
+
+            ERROR: InvalidArgumentException: Unable to locate [draft] state for [App\Post]
+            SOLUCION: Debo crear el status en el Postfactory
+                        $factory->state(\App\Post::class,'draft',['status'=>'draft']); // creo que state 'draft' y para que se cumpla debe tener el status draft. Tendre que crear la columna
+
+            ERROR: Column not found: 1054 Unknown column 'status' in 'field list'
+            SOLUCION: Voy a la migracion create post y creo la columna status que por defecto será draft
+
+            Hacemos una prueba en la que los autores pueden eliminar los posts que no estan publicados
+            Otra en la que los autores no puedan eliminar un post ya publicado
+
+   */
+    /** @test **/
+   public function authors_can_update_posts_unpublished()
+   {
+       // Arrange
+       $user=$this->createUser();
+
+       $post=factory(Post::class)->states('draft')->create([
+           'user_id'=>$user->id,
+       ]);   
+
+        // Act
+        // $result=Gate::forUser($user)->allows('update-post',$post); lo pongo directamente en el assertTrue
+        
+        //Assert
+        //$this->assertTrue($result);
+        $this->assertTrue(
+            Gate::forUser($user)->allows('update-post',$post)
+        );
+   }
+
+   /**authors_can_delete_posts_unpublished
+      Usare el Gate delete-post
+      Solo podra borrarlo si es dueño del post
+      Para ello voy a AuthServiceProvider y creo el gate delete-post
+            Gate::define('delete-post',function(User $user, Post $post){  
+                //return $user->id===$post->user_id
+                o mejor
+                return $user->id===$post->user_id
+            });
+    */
+    /** @test **/
+    public function authors_can_delete_posts_unpublished()
+    {
+        $user=$this->createUser();
+ 
+        $post=factory(Post::class)->states('draft')->create([
+            'user_id'=>$user->id,
+        ]);   
+ 
+         $this->assertTrue(
+             Gate::forUser($user)->allows('delete-post',$post)
+         );
+    }
+
+   /**authors_cannot_delete_posts_published
+      Modifico el Gate delete-post
+      Solo podra borrarlo si es dueño del post y no esta publicado.
+      Para ello creo el post y le doy estatus published
+      Y debe ser assertFalse
+      ERROR: InvalidArgumentException: Unable to locate [published] state for [App\Post].
+      SOLUCION: creo el estatus published en PostFactory
+
+      ERROR: Failed asserting that true is false.
+      SOLUCION voy a AuthServiceProvider y modifico el gate delete-post
+            Gate::define('delete-post',function(User $user, Post $post){  
+                return $user->id===$post->user_id && !$post->isPublished();  creo el metodo isPublished en el model Post. Ojo, esoty negando $post con !$post
+            });
+    */
+    /** @test **/
+    public function authors_cannot_delete_posts_published()
+    {
+        $user=$this->createUser();
+ 
+        $post=factory(Post::class)->states('published')->create([
+            'user_id'=>$user->id,
+        ]);   
+ 
+         $this->assertFalse(
+             Gate::forUser($user)->allows('delete-post',$post)
+         );
+    }
+
+    
 /*  Como llamo a estos dos metodos desde otras pruebas los muevo a TestCase.php
     public function createAdmin(){
         return factory(User::class)->states('admin')->create(); //creo el states admin en factorier UserFactory
@@ -295,4 +427,9 @@ class PolicyPolicyTest extends TestCase
         return factory(User::class)->create();
     }
 */
+
+
+
+
 }
+

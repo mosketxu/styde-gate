@@ -60,9 +60,71 @@ class AuthServiceProvider extends ServiceProvider
             ya que dice que es un poco mas generico.
             Lo hacemos a partir de una prueba unitaria: php artisan make:test UserModelTest --unit
 
+                Gate::define('update-post',function(User $user, Post $post){  
+                    return $user->isAdmin() || $user->owns($post);
+                });
+
+            Simplifico usando el metodo before del gate. Lo pongo al final con las demas reglar
+
+        */
+
+        /* Solo pueden borrar posts los autores
+                Gate::define('delete-post',function(User $user, Post $post){  
+                    return $user->owns($post);
+                });
+            y no que esten publicados
+            Gate::define('delete-post',function(User $user, Post $post){  
+                return $user->owns($post) && !$post->isPublished();  //debo crear este metodo. Lo hago en el modelo Post. OJO estoy negando $post
+            });
+            o: que sean admin o (autores y no publicado)
+            
+            Gate::define('delete-post',function(User $user, Post $post){  
+                return $user->isAdmin() || ($user->owns($post) && !$post->isPublished());  
+            });
+
+            Segun Duilio la logica del gate es un poco compleja y que estoy repitiendo la comprobacion isAdmin para cada una de las reglas.\App\User
+            LAravel me permite simplificar esto con usando el método before
+            
+            lo pongo al final con las demas reglas.
             */
-        Gate::define('update-post',function(User $user, Post $post){  
-            return $user->isAdmin() || $user->owns($post);
-        });
+
+            /* Defino una funcion callback que siempre va a ser llamada antes de revisar cualquiera de las reglas SIEMPRE
+                Si lanzo las pruebas sin poner nada, la funcion no ha alterado el comportamiento de nuestras reglas
+                    Gate::before(function(User $user){
+
+                    })
+                Si retorna true siemrpe voy a otorgar permiso, así que aquellas pruebas que esperan un false fallan
+                    Gate::before(function(User $user){
+                        return true;
+                    })
+                Si retorna false siempre deniego el permiso con lo que las pruebas que esperan true fallan
+                    Gate::before(function(User $user){
+                        return false;
+                    })
+                Si retorna null Laravel ejecutara las pruebas sin tenerlo en cuenta
+                    Gate::before(function(User $user){
+                        return null;
+                    })
+
+            Así que mi logica será que si el user es Admin retorne verdadero y que si no lo es retorne null. Puedo ponerlo o no. Lo pongo para verlo mas claro
+
+            Las pruebas pasan, así que puedo eliminar la comprobacion de si es admin en el resto de los gates
+            */
+            Gate::before(function(User $user){
+                if($user->isAdmin()){
+                    return true;
+                }
+                return null;
+
+            });
+
+            Gate::define('update-post',function(User $user, Post $post){  
+                return $user->owns($post);
+            });
+
+            Gate::define('delete-post',function(User $user, Post $post){  
+                return $user->owns($post) && !$post->isPublished();  
+            });
+
     }
 }

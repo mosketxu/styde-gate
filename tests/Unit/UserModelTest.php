@@ -43,6 +43,7 @@ class UserModelTest extends TestCase
             Las pruebas pasan    
         Entonces voy a AuthServiceProvider y uso el metodo owns en la verificacion del Gate
             Las pruebas pasan
+
     */
     /** @test **/
     public function a_user_owns_a_model()
