@@ -3,7 +3,7 @@
 namespace App\Providers;
 
 use App\{User, Post};
-use App\Policies\PostPolicy;
+use App\Policies\OldPostPolicy;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
 
@@ -15,7 +15,8 @@ class AuthServiceProvider extends ServiceProvider
      * @var array
      */
     protected $policies = [
-        'App\Model' => 'App\Policies\ModelPolicy',
+        // 'App\Model' => 'App\Policies\ModelPolicy',
+        'App\Post' => 'App\Policies\PostPolicy',
     ];
 
     /**
@@ -184,11 +185,72 @@ class AuthServiceProvider extends ServiceProvider
         /* si quiero ademas del CRUD otros metodos lo hago con array asociativo array asociativo donde las llaves van a ser los nombres de las reglas y los valores
         los nombre de los metodos que se quieren llamar
         Aqui los llamo updatePost y deletePost entonces tengo que cambiar el nombre de los metodos en PostPolcy
-        */    
+
         Gate::resource('post',PostPolicy::class,[
             'update'=>'updatePost',
             'delete'=>'deletePost', 
         ]);
+
+         */    
+
+        /* Vamos a hacerlo asociando las reglas y policies a un recusro, en concreto a los modelos de eloquent
+        y ya no tendremos que usar las gates. Usaremos policies asociados a modelos 
+        como se puede ver al comienzo de este ficheo
+                protected $policies = [
+                'App\Model' => 'App\Policies\ModelPolicy',
+                ];
+
+            En este caso estoy asociando el modelo Mdel a la poicy ModelPolicy
+            Si hacemos esto no tenemos que definir los metodos usando gates, ni de tipo reosurce i usando Gate::define
+                Gate::resource('post',PostPolicy::class,[
+                    'update'=>'updatePost',
+                    'delete'=>'deletePost', 
+                ]);
+
+        para hacer una prueba modifico en todo el proyecto lo que hace referencias a PostPlicy por OldPostPolicy
+        las pruebas pasan
+        Creo una nueva clase policy pero en esta ocasion lo enlazo al modelo Post:  
+            php artisan make:policy PostPolicy --model=Post
+
+        Revisamos la nueva clase PostPolicy y vemos que inluye algnos metodos por defecto. En concreto los CRUD
+        
+        Para enlazar este nuevo policy al modelo Post lo hacemos manualmente al comienzo de este fichero
+        y pongo en la llave el nombre del modelo Post y lo asocio a la policy PostPolicy
+        protected $policies = [
+                // 'App\Model' => 'App\Policies\ModelPolicy',
+                'App\Post' => 'App\Policies\PostPolicy',
+            ];
+        Las pruebas pasan, porque aun eso el Gate::resource. Si lo comento las pruebas no pasan
+
+        Voy a PostPolicyTest y cambio el uso del gate por el uso del policy modificando donde pone post.update por solo update
+        con los demaas lo mismo
+        La pruebas fallan
+        ERROR: There were 3 failures:
+                1) Tests\Unit\PostPolicyTest::authors_can_update_posts
+                Failed asserting that false is true.
+        SOLUCION: Agregar la logica en PostPolicy, no lo había hecho. Lo copio de OldPostPolicy a PostPlicy
+        Las pruebas pasan
+
+        Pruebo a eliminar las pruebas que defini con el gate y
+            // Gate::resource('post', OldPostPolicy::class, [
+            //     'update' => 'updatePost',
+            //     'delete' => 'deletePost',
+            // ]);
+
+        Las pruebas pasan
+        y podría eliminar la clase oldPostPolicys
+
+        ¿Cuando usar politicas asociadas a un modelo o Gate::define y Gate:resource?
+        La doc de Laravel dice usemos politicas de acceso cuando estemos trabajando con reglas asociadas a un modelo
+        y que definamos reglas con gate:resource o defie cuando necesitemos reglas no asociadas a un modelo en particular
+        por ejemplo una regla para definir si un usuario tiene acceso al dashboard o no. Puede que el dashbord no este asociado a ningun mdelo en particular
+
+        En la siguiente leccion voy a asumir que estoy trabajando en el modulo de post puntualmente en la accion para actualizar posts
+                
+
+         */
+
+
     }
 
 }

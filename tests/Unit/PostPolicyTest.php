@@ -9,7 +9,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use \Illuminate\Support\Facades\Gate;
 
 
-class PolicyPolicyTest extends TestCase
+class PostPolicyTest extends TestCase
 {
     use RefreshDatabase;
     
@@ -198,7 +198,8 @@ class PolicyPolicyTest extends TestCase
 
          // Act
          // $result=Gate::allows('update-post',$post); //tras el cambio en los gates a usar el gate::resource cambia el nombre de la regla
-         $result=Gate::allows('post.update',$post); 
+        // $result = Gate::allows('post.update', $post); // tras probar asociando modelos a recursos quito el post.
+        $result = Gate::allows('update', $post); 
          //Assert
          $this->assertTrue($result);
     }
@@ -223,7 +224,8 @@ class PolicyPolicyTest extends TestCase
  
          $this->assertTrue(
              //Gate::forUser($admin)->allows('delete-post',$post) //tras el cambio en los gates a usar el gate::resource cambia el nombre de la regla
-             Gate::forUser($admin)->allows('post.delete',$post)
+            // Gate::forUser($admin)->allows('post.delete', $post) // tras probar asociando modelos a recursos quito el post.
+            Gate::forUser($admin)->allows('delete', $post)
          );
     }
 
@@ -245,7 +247,8 @@ class PolicyPolicyTest extends TestCase
 
          // Act
          //$result=Gate::allows('update-post',$post); //tras el cambio en los gates a usar el gate::resource cambia el nombre de la regla
-         $result=Gate::allows('post.update',$post);
+         //$result=Gate::allows('post.update',$post); // tras probar asociando modelos a recursos quito el post.
+        $result = Gate::allows('update', $post); 
          //Assert
          $this->assertFalse($result);
     }
@@ -275,8 +278,8 @@ class PolicyPolicyTest extends TestCase
          // Act
          //$result=Gate::allows('update-post',$post);
          //$result=Gate::forUser($user)->allows('update-post',$post);
-         $result=Gate::forUser($user)->allows('post.update',$post); //por el uso de resource en gate
-
+         //$result=Gate::forUser($user)->allows('post.update',$post); //por el uso de resource en gate. // tras probar asociando modelos a recursos quito el post.
+        $result = Gate::forUser($user)->allows('update', $post);
 
          //Assert
          $this->assertFalse($result);
@@ -331,7 +334,8 @@ class PolicyPolicyTest extends TestCase
 
          // Act
          // $result=(new \App\Policies\PostPolicy)->update($user,$post); //tambien puedo insertar la clase al comienzo del fichero
-            $result=Gate::foruser($user)->allows('post.update',$post);
+        // $result = Gate::foruser($user)->allows('post.update', $post); // tras probar asociando modelos a recursos quito el post.
+        $result = Gate::foruser($user)->allows('update', $post);
          
          //Assert
          $this->assertTrue($result);
@@ -390,7 +394,8 @@ class PolicyPolicyTest extends TestCase
         //$this->assertTrue($result);
         $this->assertTrue(
 //            Gate::forUser($user)->allows('update-post',$post)
-            Gate::forUser($user)->allows('post.update',$post)
+            // Gate::forUser($user)->allows('post.update',$post) // tras probar asociando modelos a recursos quito el post.
+            Gate::forUser($user)->allows('update', $post)
         );
    }
 
@@ -415,7 +420,8 @@ class PolicyPolicyTest extends TestCase
  
          $this->assertTrue(
             // Gate::forUser($user)->allows('delete-post',$post)
-            Gate::forUser($user)->allows('post.delete',$post)
+            // Gate::forUser($user)->allows('post.delete',$post)// tras probar asociando modelos a recursos quito el post.
+            Gate::forUser($user)->allows('delete', $post)
         );
     }
 
@@ -443,7 +449,8 @@ class PolicyPolicyTest extends TestCase
         ]);   
  
          $this->assertFalse(
-             Gate::forUser($user)->allows('post.delete',$post)
+            // Gate::forUser($user)->allows('post.delete', $post)
+            Gate::forUser($user)->allows('delete', $post)
          );
     }
 
@@ -462,4 +469,3 @@ class PolicyPolicyTest extends TestCase
 
 
 }
-
