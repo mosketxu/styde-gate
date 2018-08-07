@@ -16,8 +16,8 @@ abstract class TestCase extends BaseTestCase
         return factory(User::class)->states('admin')->create(); //creo el states admin en factorier UserFactory
     }
 
-    public function createUser(){
-        return factory(User::class)->create();
+    public function createUser(array $attributes=[]){
+        return factory(User::class)->create($attributes);
     }
 
 }

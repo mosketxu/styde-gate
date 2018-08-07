@@ -28,6 +28,12 @@ class User extends Authenticatable
         'password', 'remember_token',
     ];
 
+    /** Dice que un usuario puede tener muchos posts */
+    public function post()
+    {
+        return $this->hasMany(Post::class);
+    }
+
     public function isAdmin(){
         return $this->role==='admin';
     }

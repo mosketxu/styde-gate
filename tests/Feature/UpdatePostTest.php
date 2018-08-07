@@ -86,7 +86,7 @@ class UpdatePostTest extends TestCase
     /** @test */
     public function admins_can_update_posts()
     {
-        // $this->withoutExceptionHandling();
+        $this->withoutExceptionHandling();
 
         $post=factory(Post::class)->create();
         $admin=$this->createAdmin();

@@ -1,9 +1,10 @@
 <?php
 
+/*  Cuando uso los controladores ya no necesito usar estas clases pero si en PostControler
 use App\Post;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
-
+ */
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -91,7 +92,10 @@ Route::put('admin/posts/{post}', function (Post $post, Request $request) {
 
 
  */
-Route::put('admin/posts/{post}', function (Post $post, Request $request) {
+
+/* Comienzo la siguiete leccion y vamos a pasar la logica a los controladores
+    Comento la ruta y la preparo para llevarlo a controlador 
+ Route::put('admin/posts/{post}', function (Post $post, Request $request) {
 
     $post->update([
         'title' => $request->title,
@@ -100,6 +104,42 @@ Route::put('admin/posts/{post}', function (Post $post, Request $request) {
     return 'Post updated!';
 
 })->middleware('can:update,post');
+*/
+/* corto la funcion anonima y pongo el nombre del cotrolador al que voy a llamar 
+    creo el nuevo controlador: php artisan make:controller Admin/PostController  
+    Ya no necesito importar las clases Post, Request, Gate
+    Las pruebas pasan
+    Vamos a ver otra manera de usar nuestro policy
+            Route::put('admin/posts/{post}', 'Admin\PostController@update')->middleware('can:update,post');
+ */
+/* Vamos a ver otra manera de usar nuestro policy en lugar de usar un middleware
+    quito el middleware
+        Route::put('admin/posts/{post}', 'Admin\PostController@update');
+    ERROR: Las pruebas fallan
+    SOLUCION: En el controlador PostController antes de actualizar el post llamo al metodo authorize
+
+    ERROR/SOLUCION: Tendre que asegurarme que el usuario este conectado con el middleware('auth')
+
+    Tambien podemos usar grupos de rutas
+    Meto la ruta que ya tenia
+        Route::put('admin/posts/{post}', 'Admin\PostController@update')->middleware('auth');
+    en un grupo en el que podría poner un prefix que en este caso no pongo
+        quito en la ruta el middleare pq ya esta en el grupo y el nombre de espacio Admin donde llamo al controller
+    Las pruebas pasan
+
+    Otra opcion para autorizar suponiendo que estamos usando FormRequest
+ */
+
+Route::middleware('auth')->namespace('Admin\\')->group(function(){
+    Route::post('admin/posts','PostController@store');
+    
+    Route::put('admin/posts/{post}', 'PostController@update');
+});
+
+ /* Otra opcion para autorizar suponiendo que estamos usando FormRequest
+    Creo un FormRequest         php artisan make:request UpdatePostRequest
+ */
+
 
 Route::get('login', function () {
     return ('Login');

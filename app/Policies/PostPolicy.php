@@ -30,7 +30,7 @@ class PostPolicy
      */
     public function create(User $user)
     {
-        //
+        return $user->role==='author'; // nuestros usuarios solo pueden crear posts si son autores o admin
     }
 
     /**
