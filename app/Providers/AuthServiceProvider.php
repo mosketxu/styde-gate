@@ -246,6 +246,7 @@ class AuthServiceProvider extends ServiceProvider
         por ejemplo una regla para definir si un usuario tiene acceso al dashboard o no. Puede que el dashbord no este asociado a ningun mdelo en particular
 
         En la siguiente leccion voy a asumir que estoy trabajando en el modulo de post puntualmente en la accion para actualizar posts
+        php artisan make:test UpdatePostTest y voy allí
                 
 
          */
