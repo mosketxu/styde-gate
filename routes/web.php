@@ -130,17 +130,39 @@ Route::put('admin/posts/{post}', function (Post $post, Request $request) {
     Otra opcion para autorizar suponiendo que estamos usando FormRequest
  */
 
-Route::middleware('auth')->namespace('Admin\\')->group(function(){
+/*
+ Route::middleware('auth')->namespace('Admin\\')->group(function(){
+    
+    Route::get('admin/posts','PostConroller@index');
+
     Route::post('admin/posts','PostController@store');
     
     Route::put('admin/posts/{post}', 'PostController@update');
+});*/
+
+/* Modifico el grupo añadiendo el prefix admin */
+Route::middleware('auth')->namespace('Admin\\')->prefix('admin/')->group(function () {
+
+    Route::get('posts','PostController@index');
+
+    Route::post('posts', 'PostController@store');
+
+    Route::put('posts/{post}', 'PostController@update');
 });
 
  /* Otra opcion para autorizar suponiendo que estamos usando FormRequest
     Creo un FormRequest         php artisan make:request UpdatePostRequest
  */
 
+/* Cuando he hecho el php artisan make:auth ya no me hace falta la ruta
+        Route::get('login', function () {
+            return ('Login');
+        })->name('login');
+    Lo pruebo con 
+        http://styde-gates.test/admin/posts
+    y veo que me redirige al login. Esto lo hace auth
+    Tengo un form de login y otro de registro
+ */
+Auth::routes();
 
-Route::get('login', function () {
-    return ('Login');
-})->name('login');
+Route::get('/home', 'HomeController@index')->name('home');

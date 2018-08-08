@@ -10,6 +10,18 @@ use Illuminate\Http\Response;
 class PostController extends Controller
 {
 
+    public function index()
+    {
+//        return view('admin.posts.index'); 
+    /* con la prueba index me hace falta modificarlo ya que debo capturar en la vble $posts
+    todos los posts de la BD y pasar la variable $posts a la vista */
+
+        // $posts=Post::all(); // si quiero paginacion uso el metodo paginate
+        $posts = Post::paginate();
+
+        return view('admin.posts.index', compact('posts'));
+    }
+
     /* Pego la funcion anonima del Route::put('admin/posts/{post}'
         y la convierto en un metodo: pongo public y un nombre, en este caso update que es como le llamare desde web.php
         Me aseguro de importar las clases que necesito: request y el modelo post
