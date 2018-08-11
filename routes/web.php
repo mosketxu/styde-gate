@@ -147,6 +147,8 @@ Route::middleware('auth')->namespace('Admin\\')->prefix('admin/')->group(functio
 
     Route::post('posts', 'PostController@store');
 
+    Route::get('posts/{post}/edit', 'PostController@edit')->name('posts.edit');   
+
     Route::put('posts/{post}', 'PostController@update');
 });
 

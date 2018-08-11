@@ -128,6 +128,8 @@ class PostController extends Controller
     {
         $this->authorize('update', $post);
 
+        return 'Editar post';
+
     }
 
 }

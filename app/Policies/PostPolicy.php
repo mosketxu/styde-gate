@@ -40,7 +40,8 @@ class PostPolicy
      * @param  \App\Post  $post
      * @return mixed
      */
-    public function update(User $user, Post $post)
+
+     public function update(User $user, Post $post)
     {
         return $user->owns($post);
     }
@@ -55,6 +56,11 @@ class PostPolicy
     public function delete(User $user, Post $post)
     {
         return $user->owns($post) && !$post->isPublished(); 
+    }
+
+    public function report()
+    {
+        return true;
     }
 
     /**
