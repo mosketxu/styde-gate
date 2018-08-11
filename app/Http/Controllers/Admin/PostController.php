@@ -17,7 +17,33 @@ class PostController extends Controller
     todos los posts de la BD y pasar la variable $posts a la vista */
 
         // $posts=Post::all(); // si quiero paginacion uso el metodo paginate
-        $posts = Post::paginate();
+        //$posts = Post::paginate();
+
+        /* me aseguro de que solo mando a la vista los post donde el usuario es el autor del post 
+            Una forma es obtener el id del usuario conectado a traves del metodo auth() y luego filtro pidiendo todos los posts cuyos user_id sean el del user conectado
+            Recordamos que solo podemos acceder a esta vista si el usuario esta conectado. Si veo la ruta en web.php veo que la ruta esta bajo el middleware 'auth'
+           
+            $posts = Post::where('user_id',auth()->id())->paginate();
+        */
+
+        /* si ademas quiero que si es admin muestre todos los posts lo puedo haer de una forma "un poco inocente" segun duilio chequeando si el usuaro es admin
+            para ello lo obtengo del metodo isAdmin del modelo User que he obtenido del metodo auth()
+        */
+/*         if (auth()->user()->isAdmin()){
+            $posts = Post::paginate();
+        }else{
+            $posts = Post::where('user_id',auth()->id())->paginate();
+        } 
+        una forma mas limpia: COn el metodo query que es el que utiliza cuando necesita usar consultas de varias lineas
+        cargo en la vble $q el where siempre excepto si es admin
+
+        */
+        $posts=Post::query()
+            ->unless(auth()->user()->isAdmin(),function($q){
+                $q->where('user_id', auth()->id());
+            })
+            ->paginate();
+
 
         return view('admin.posts.index', compact('posts'));
     }

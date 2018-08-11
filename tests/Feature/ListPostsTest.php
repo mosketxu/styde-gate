@@ -12,7 +12,7 @@ class ListPostsTest extends TestCase
     /*En esta prueba voy a preparar las funcionalidades para que los usurios puedan ver los posts*/ 
 
     use RefreshDatabase;
-    /* authenticated_users_can_view_posts 
+    /* authenticated_users_can_view_posts  . Comento la funcion y la hago con nuevo nombre para que solo los autores puedan ver los posts
         use RefreshDatabase;
         creo dos posts con modelo factory
         probamos que cuando hacemos una peticions a la url posts recibimos estado 200
@@ -87,7 +87,7 @@ class ListPostsTest extends TestCase
         
      */
     /** @test */
-    public function authenticated_users_can_view_posts()
+/*     public function authenticated_users_can_view_posts()
     {
         $this->withoutExceptionHandling();
         $post1 = factory(Post::class)->create();
@@ -103,4 +103,110 @@ class ListPostsTest extends TestCase
                 return $posts->contains($post1) && $posts->contains($post2);
             });
     }
+ */
+    /* authors_can_only_see_their_posts  . Comento la funcion y la hago con nuevo nombre para que solo los autores puedan ver los posts 
+        Creare el autor al principio de la prueba y lo asigno como autor del primer post, no será autor del segundo post pero si de un tercer post y no de un cuarto post
+        Ahora la condicion es que la coleccin de posts contenga el primer post pero no el segundo post y si el tercero pero no el cuarto
+        ERROR: 1) Tests\Feature\ListPostsTest::authors_can_only_see_their_posts
+                Illuminate\Auth\AuthenticationException: Unauthenticated.
+        SOLUCION: No habia conectado el usuario $this->actingAs($user);
+
+        ERROR: 1) Tests\Feature\ListPostsTest::authors_can_only_see_their_posts
+                Failed asserting that false is true.
+        SOLUCION: Debe fallar porque estoy pasando todos los posts a la vista, no solo los que tocan
+                En PostController en el listado de posts me aseguro de que solo mando la lista de posts donde el usuario es el autor
+                y me aseguro de que solo mando a la vista los post donde el usuario es el autor del post 
+                Una forma es obtener el id del usuario conectado a traves del metodo auth() y luego filtro pidiendo todos los posts 
+                cuyos user_id sean el del user conectado
+                Recordamos que solo podemos acceder a esta vista si el usuario esta conectado. Si veo la ruta en web.php veo que la ruta esta bajo el middleware 'auth'
+     
+                    $posts = Post::where ('user_id', auth ()->id ())->paginate ();
+        Las pruebas pasan y en la web se cumple
+
+        Vamos a ver qué pasa con los admin. Hago otra prueba
+     */
+
+    /** @test */
+    public function authors_can_only_see_their_posts()
+    {
+        $this->withoutExceptionHandling();
+
+        $user = $this->createUser();
+
+        $this->actingAs($user);
+
+        $post1 = factory(Post::class)->create(['user_id' => $user->id]);
+        $post2 = factory(Post::class)->create();
+        $post3 = factory(Post::class)->create(['user_id' => $user->id]);
+        $post4 = factory(Post::class)->create();
+
+
+        $response = $this->get('admin/posts');
+
+        $response->assertStatus(200)
+            ->assertViewIs('admin.posts.index')
+            ->assertViewHas('posts', function ($posts) use ($post1, $post2, $post3, $post4) { // php me obliga a incluir las vbles con use
+                return $posts->contains($post1) && !$posts->contains($post2)
+                    && $posts->contains($post3) && !$posts->contains($post4);
+            });
+    }
+
+    /* adins_can_see_all_the_posts
+        Creo un admin
+        No creo post donde el usuario es autor. No lo necesito
+        Compruebo que se vean los posts que tocan
+
+        ERROR: 1) Tests\Feature\ListPostsTest::adins_can_see_all_the_posts
+                Failed asserting that false is true.
+                 Falla porque estoy limitando que los post que se muestren sean solo los del author, y nuestr usuario no ha creado ningun posts
+        SOLUCION: Voy a PostCOntroller. si ademas quiero que si es admin muestre todos los posts lo puedo haer de una forma "un poco inocente" segun duilio chequeando si el usuaro es admin
+            para ello lo obtengo del metodo isAdmin del modelo User que he obtenido del metodo auth()
+                    if (auth()->user()->isAdmin()){
+                       $posts = Post::paginate();
+                    }else{
+                    $posts = Post::where('user_id',auth()->id())->paginate();
+                    }
+            una forma mas limpia:
+                Con el metodo query que es el que utiliza cuando necesita usar consultas de varias lineas
+                cargo en la vble $q el where siempre excepto si es admin
+
+                $posts = Post::query ()
+                    ->unless (auth ()->user ()->isAdmin (), function($q)
+                {
+                    $q->where('user_id', auth()->id());
+                }
+                )
+                    ->paginate ();
+
+        Pruebo con tinker a cambiar el role de mi usuario a admin y verlo en la web
+        php artisan tinker;
+        $user=User::first();
+        $user->role='admin';
+        $user->save();
+
+        las pruebas pasan y la web tb
+     */
+    /** @test */
+    public function admins_can_see_all_the_posts()
+    {
+        $this->withoutExceptionHandling();
+        
+        // $admin = $this->createAdmin();
+        // $this->actingAs($admin);
+        // lo mismo en una linea
+        $this->actingAs($this->createAdmin());
+
+        $post2 = factory(Post::class)->create();
+        $post4 = factory(Post::class)->create();
+
+
+        $response = $this->get('admin/posts');
+
+        $response->assertStatus(200)
+            ->assertViewIs('admin.posts.index')
+            ->assertViewHas('posts', function ($posts) use ( $post2, $post4) { // php me obliga a incluir las vbles con use
+                return $posts->contains($post2) && $posts->contains($post4);
+            });
+    }
+
 }
